@@ -8,8 +8,8 @@ package com.wifihandler;
  */
 public interface WifiRequestCallbacks {
 
-    void onSuccess(String processId, boolean isWifiEnabled);
+    void onSuccess(String processId, WifiOperationType requestedOperation);
 
-    void onFailure(String processId, boolean isWifiEnabled, String reason);
+    void onFailure(String processId, WifiOperationType requestedOperation, String reason);
 
 }

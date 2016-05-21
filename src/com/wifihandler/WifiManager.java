@@ -1,6 +1,5 @@
 package com.wifihandler;
 
-import com.wifihandler.internal.Operation;
 import com.wifihandler.internal.OperationController;
 
 /**
@@ -18,14 +17,12 @@ public class WifiManager {
         operationController = new OperationController();
     }
 
-    public static void enableWifi(String processId, WifiRequestCallbacks callbacks) {
-        Operation operation = new Operation(processId, Operation.OperationType.ENABLE_WIFI, callbacks);
-        wifiHandler.operationController.addOperation(operation);
+    public static void enableWifi(String processId, WifiRequestCallbacks callback) {
+        wifiHandler.operationController.addOperation(processId, WifiOperationType.ENABLE_WIFI, callback);
     }
 
-    public static void disableWifi(String processId, WifiRequestCallbacks callbacks){
-        Operation operation = new Operation(processId, Operation.OperationType.DISABLE_WIFI, callbacks);
-        wifiHandler.operationController.addOperation(operation);
+    public static void disableWifi(String processId, WifiRequestCallbacks callback){
+        wifiHandler.operationController.addOperation(processId, WifiOperationType.DISABLE_WIFI, callback);
     }
 
 }

@@ -2,17 +2,18 @@ package com.wifihandler.internal;
 
 import com.wifihandler.WifiRequestCallbacks;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
 
 /**
- * Dispatcher that continuously polls {@link Operation} from queue & executes
+ * Thread that continuously polls {@link Operation} from queue & executes it.
  *
  * @author gauravarora
  * @since 21/05/16
  */
-public class OperationDispatcher extends Thread{
+public class OperationDispatcher extends Thread {
 
     private final Queue<Operation> operationQueue;
     private final Set<String> activeWifiProcesses;
@@ -33,15 +34,14 @@ public class OperationDispatcher extends Thread{
                 try {
                     Operation operation = operationQueue.poll();
                     performOperation(operation);
-                }
-                catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
     }
 
-    public void stopExecution(){
+    public void stopExecution() {
         shouldExecute = false;
     }
 
@@ -54,40 +54,52 @@ public class OperationDispatcher extends Thread{
         String reason = null;
         switch (operation.getOperationType()) {
             case ENABLE_WIFI: {
-                if(!isWifiEnabled()) {
-                    status = wifiHardwareInterface.enableWifiHardware();
-                    if(status){
-                        activeWifiProcesses.add(operation.getProcessId());
-                    }
+                status = isWifiEnabled() || wifiHardwareInterface.enableWifiHardware();
+                if (status) {
+                    activeWifiProcesses.add(operation.getProcessId());
                 }
             }
             break;
 
             case DISABLE_WIFI: {
-                if (!activeWifiProcesses.isEmpty()) {
+                if (!hasOtherActiveOperations(operation)) {
                     status = false;
                     reason = "WiFi in use. Can't turn off";
                 } else {
-                    if(isWifiEnabled()) {
+                    if (isWifiEnabled()) {
                         status = wifiHardwareInterface.disableWiFiHardware();
                     }
-                    activeWifiProcesses.remove(operation.getProcessId());
+                    if(status) {
+                        activeWifiProcesses.remove(operation.getProcessId());
+                    }
                 }
             }
             break;
         }
 
-        WifiRequestCallbacks callbacks = operation.getCallbacks();
-        if (callbacks != null) {
+        notifyCallbacks(operation, status, reason);
+    }
+
+    private boolean hasOtherActiveOperations(Operation operation) {
+        return activeWifiProcesses.size() > 1 || !activeWifiProcesses.contains(operation.getProcessId());
+    }
+
+    private void notifyCallbacks(Operation operation, boolean status, String reason) {
+        Collection<WifiRequestCallbacks> callbacks = operation.getCallbacks();
+        if (callbacks == null || callbacks.isEmpty()) {
+            return;
+        }
+
+        for (WifiRequestCallbacks callback : callbacks) {
             if (status) {
-                callbacks.onSuccess(operation.getProcessId(), isWifiEnabled());
+                callback.onSuccess(operation.getProcessId(), operation.getOperationType());
             } else {
-                callbacks.onFailure(operation.getProcessId(), isWifiEnabled(), reason);
+                callback.onFailure(operation.getProcessId(), operation.getOperationType(), reason);
             }
         }
     }
 
-    private boolean isWifiEnabled(){
+    private boolean isWifiEnabled() {
         return !(activeWifiProcesses == null || activeWifiProcesses.isEmpty());
     }
 
@@ -95,7 +107,7 @@ public class OperationDispatcher extends Thread{
         return !(operation == null || operation.getOperationType() == null);
     }
 
-    private WifiHardwareInterface getWifiHardwareInterface(){
+    private WifiHardwareInterface getWifiHardwareInterface() {
         return null;
     }
 }

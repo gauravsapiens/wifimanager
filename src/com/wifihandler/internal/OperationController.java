@@ -1,5 +1,8 @@
 package com.wifihandler.internal;
 
+import com.wifihandler.WifiOperationType;
+import com.wifihandler.WifiRequestCallbacks;
+
 import java.util.LinkedList;
 
 /**
@@ -22,13 +25,17 @@ public class OperationController {
 
     /**
      * This method takes care of adding operation to queue. This method is synchronized to handle calls from
-     * multiple threads. Also, it checks for consequtive duplicate requests
+     * multiple processes. Also, it checks for consecutive duplicate requests
      *
-     * @param operation
+     * @param processId
+     * @param operationType
+     * @param callback
      */
-    public synchronized void addOperation(Operation operation) {
+    public synchronized void addOperation(String processId, WifiOperationType operationType, WifiRequestCallbacks callback) {
+        Operation operation = new Operation(processId, operationType, callback);
         Operation lastOperation = operationQueue.getLast();
         if(lastOperation.equals(operation)){
+            lastOperation.addCallbacks(callback);
             return;
         }
         operationQueue.add(operation);

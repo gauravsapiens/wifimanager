@@ -1,6 +1,10 @@
 package com.wifihandler.internal;
 
+import com.wifihandler.WifiOperationType;
 import com.wifihandler.WifiRequestCallbacks;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Defines a basic wifi operation
@@ -10,22 +14,17 @@ import com.wifihandler.WifiRequestCallbacks;
  */
 public class Operation {
 
-    public enum OperationType {
-        ENABLE_WIFI,
-        DISABLE_WIFI
-    }
-
     private String processId;
-    private OperationType operationType;
-    private WifiRequestCallbacks callbacks;
+    private WifiOperationType operationType;
+    private Collection<WifiRequestCallbacks> callbacks;
 
-    public Operation(){
+    public Operation() {
     }
 
-    public Operation(String processId, OperationType operationType, WifiRequestCallbacks callbacks) {
+    public Operation(String processId, WifiOperationType operationType, WifiRequestCallbacks callback) {
         this.processId = processId;
         this.operationType = operationType;
-        this.callbacks = callbacks;
+        addCallbacks(callback);
     }
 
     public String getProcessId() {
@@ -36,31 +35,35 @@ public class Operation {
         this.processId = processId;
     }
 
-    public OperationType getOperationType() {
+    public WifiOperationType getOperationType() {
         return operationType;
     }
 
-    public void setOperationType(OperationType operationType) {
+    public void setOperationType(WifiOperationType operationType) {
         this.operationType = operationType;
     }
 
-    public WifiRequestCallbacks getCallbacks() {
+    public Collection<WifiRequestCallbacks> getCallbacks() {
         return callbacks;
     }
 
-    public void setCallbacks(WifiRequestCallbacks callbacks) {
+    public void setCallbacks(Collection<WifiRequestCallbacks> callbacks) {
         this.callbacks = callbacks;
+    }
+
+    public void addCallbacks(WifiRequestCallbacks callback) {
+        if (callbacks == null) {
+            callbacks = new ArrayList<WifiRequestCallbacks>();
+        }
+        callbacks.add(callback);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if(obj == null || !(obj instanceof Operation)){
+        if (obj == null || !(obj instanceof Operation)) {
             return false;
         }
         Operation operation = (Operation) obj;
-        if(operation.processId.equals(processId) && operation.getOperationType() == operationType){
-            return true;
-        }
-        return false;
+        return operation.processId.equals(processId) && operation.getOperationType() == operationType;
     }
 }
